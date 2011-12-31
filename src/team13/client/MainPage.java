@@ -1,20 +1,12 @@
 package team13.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
-import com.google.gwt.http.client.URL;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
@@ -22,7 +14,9 @@ import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
@@ -48,111 +42,141 @@ public class MainPage implements EntryPoint {
 			.create(GreetingService.class);
 
 	/*our own instances*/
-	private Button loginButton = new Button("login");
-	private Label statusLabel = new Label();
+	public static MainPage currentPage;
+	
+	private Button authenticButton = new Button("Login");
+	private Button addButton = new Button("<");
 	private Label errorMsgLabel = new Label();
+	private Label hintLabel = new Label();
+	//private Label statusLabel = new Label();
+	//private Image myAvatar = new Image();
+	private Image runningBar = new Image("images/running.gif");
+	private CellList<FBUser> circleCellList = new CellList<FBUser>(new FBUserCell());
+	private CellList<FBUser> friendsCellList = new CellList<FBUser>(new FBUserCell());
 	private HorizontalPanel loginPanel = new HorizontalPanel();
-	private Button showFriendsButton = new Button("show friends");
-	private FlexTable friendsFlexTable = new FlexTable();
+	private ScrollPanel circlePanel = new ScrollPanel();
+	private ScrollPanel friendsPanel = new ScrollPanel();
+	private FlexTable statusTable = new FlexTable();
+	private FlexTable twoListTable = new FlexTable();
 	private VerticalPanel mainPanel = new VerticalPanel();
-	private ScrollPanel scrollPanel = new ScrollPanel();
-	private CellList<String> friendsCellList = new CellList<String>(new TextCell());
-	private Button testButton = new Button("test");
+	private ListDataProvider<FBUser> circleProvider = new ListDataProvider<FBUser>();
+	private ListDataProvider<FBUser> friendsProvider = new ListDataProvider<FBUser>();
+	
+	private Controller controller = new Controller();
+	private boolean loggedIn;
 	
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
+		MainPage.currentPage = this;
+		
 		if(Window.Location.getHash().length() == 0){
-			statusLabel.setText("not logged in");
-			showFriendsButton.setEnabled(false);
+			loggedIn = false;
 		}else{
-			statusLabel.setText("logged in");
-			loginButton.setEnabled(false);
+			loggedIn = true;
 		}
+		
+		initUIProperty();
+		initUIToPage();
+		
+		if(loggedIn){
+			controller.fetchNeededJSON();
+		}
+		
+	}
+	
+	private void initUIProperty(){
+		if(!loggedIn){
+			hintLabel.setText("Please login as your Facebook account -> ");
+			statusTable.addStyleName("hiddenWidget");
+		}else{
+			hintLabel.setVisible(false);
+			//authenticButton.setText("Logout");
+			authenticButton.setEnabled(false);
+		}
+		
+		hintLabel.addStyleName("hintLabel");
 		
 		errorMsgLabel.setStyleName("errorMessage");
 		errorMsgLabel.setVisible(false);
 		
-		loginPanel.add(loginButton);
-		loginPanel.add(statusLabel);
+		addButton.setEnabled(false);
 		
-		scrollPanel.add(friendsCellList);
-		scrollPanel.setHeight("50px");
+		authenticButton.addClickHandler(new ClickHandler(){
+			@Override
+			public void onClick(ClickEvent event) {
+				if(!loggedIn){
+					controller.login();
+				}else{
+					controller.logout();
+				}
+			}
+		});
+		
+		circleProvider.addDataDisplay(circleCellList);
+		friendsProvider.addDataDisplay(friendsCellList);
+	}
+	
+	private void initUIToPage(){
+		loginPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+		loginPanel.add(hintLabel);
+		loginPanel.add(authenticButton);
+		loginPanel.addStyleName("loginPanel");
+		
+		circlePanel.add(circleCellList);
+		friendsPanel.add(friendsCellList);
+		circlePanel.addStyleName("scrollPanel");
+		friendsPanel.addStyleName("scrollPanel");
+		
+		twoListTable.setText(0, 0, "Circle");
+		twoListTable.setText(0, 2, "Friends");
+		twoListTable.setWidget(1, 0, circlePanel);
+		twoListTable.setWidget(1, 1, addButton);
+		twoListTable.setWidget(1, 2, friendsPanel);
+		
+		statusTable.addStyleName("statusTable");
+		statusTable.setText(0, 0, "initializing...");
+		statusTable.setWidget(1, 0, runningBar);
 		
 		mainPanel.add(errorMsgLabel);
 		mainPanel.add(loginPanel);
-		mainPanel.add(showFriendsButton);
-		mainPanel.add(testButton);
-		//mainPanel.add(friendsFlexTable);
-		mainPanel.add(scrollPanel);
+		mainPanel.add(statusTable);
+		mainPanel.add(twoListTable);
+		mainPanel.addStyleName("mainPanel");
 		
 		RootPanel.get("main-content").add(mainPanel);
-		
-		loginButton.addClickHandler(new ClickHandler(){
-			@Override
-			public void onClick(ClickEvent event) {
-				loginFB();
-			}
-		});
-		
-		showFriendsButton.addClickHandler(new ClickHandler(){
-			@Override
-			public void onClick(ClickEvent event) {
-				showFriends();
-			}
-		});
-		
-		testButton.addClickHandler(new ClickHandler(){
-			@Override
-			public void onClick(ClickEvent event) {
-				List<String> testList = Arrays.asList("A", "B", "C");
-				friendsCellList.setRowData(1, testList);
-			}
-		});
 	}
 	
-	private void loginFB(){
-		String url = "https://www.facebook.com/dialog/oauth?client_id=195431067216915&redirect_uri="
-				+ Window.Location.getHref() + "&response_type=token";
-		Window.Location.replace(url);
-	}
-	
-	private void showFriends(){
-		String url = "https://graph.facebook.com/me/friends?" + Window.Location.getHash().substring(1);
-		url = URL.encode(url);
-		
-		RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, url);
-		
-		try {
-			Request request = builder.sendRequest(null, new RequestCallback(){
-
-				@Override
-				public void onResponseReceived(Request request,
-						Response response) {
-					if(200 == response.getStatusCode()){
-						//clear errors
-						errorMsgLabel.setVisible(false);
-						fillTable(response.getText());
-					}else{
-						displayError("Couldn't retrieve JSON (" + response.getStatusText() + ")");
-					}
-				}
-
-				@Override
-				public void onError(Request request, Throwable exception) {
-					displayError("Couldn't retrieve JSON");
-				}
-				
-			});
-		} catch (RequestException e) {
-			displayError("Couldn't retrieve JSON");
+	public void setStatus(String text, boolean hidden){
+		statusTable.setText(0, 0, text);
+		if(hidden){
+			statusTable.getCellFormatter().addStyleName(1, 0, "hiddenWidget");
+		}else{
+			statusTable.getCellFormatter().removeStyleName(1, 0, "hiddenWidget");
 		}
+		
 	}
 	
-	private void displayError(String error){
+	public void displayError(String error){
 		errorMsgLabel.setText("Error: " + error);
 		errorMsgLabel.setVisible(true);
+	}
+	
+	public void cleanError(){
+		errorMsgLabel.setVisible(false);
+	}
+	
+	public List<FBUser> getCircleList(){
+		return circleProvider.getList();
+	}
+	
+	public List<FBUser> getFriendsList(){
+		return friendsProvider.getList();
+	}
+	
+	public void setHintLabel(String text){
+		hintLabel.setText(text);
 	}
 	
 	private void fillTable(String jsonStr){
@@ -169,7 +193,7 @@ public class MainPage implements EntryPoint {
 		}
 		
 		ListDataProvider<String> dataProvider = new ListDataProvider<String>();
-		dataProvider.addDataDisplay(friendsCellList);
+		//dataProvider.addDataDisplay(friendsCellList);
 		List<String> list = dataProvider.getList();
 		for(String friend: friendsList){
 			list.add(friend);

@@ -11,9 +11,41 @@
 	color: red;
 }
 
+.mainPanel{
+	margin:auto;
+	border-style:double;
+	padding:10px;
+}
+
+.loginPanel{
+	margin-left:auto;
+}
+
+.hintLabel{
+	margin-right: 3px;
+}
+
+.statusTable{
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.hiddenWidget{
+	visibility: hidden;
+}
+
 /** Most GWT widgets already have a style name defined */
 .gwt-DialogBox {
   width: 400px;
+}
+
+.scrollPanel{
+	width: 250px;
+	height: 400px;
+	border-style: solid;
+	border-width: thin;
 }
 
 .dialogVPanel {
