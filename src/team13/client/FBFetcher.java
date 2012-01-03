@@ -82,7 +82,7 @@ public class FBFetcher {
 		public void onResponseReceived(Request request, Response response) {
 			if(200 == response.getStatusCode()){
 				jsonMap.put(jsonName, JSONParser.parseStrict(response.getText()).isObject());
-				Controller.currentController.checkJSON();
+				MainPage.currentPage.checkJSON();
 			}else{
 				MainPage.currentPage.displayError("Couldn't retrieve JSON (" + response.getStatusText() + ")");
 			}

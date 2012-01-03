@@ -32,6 +32,10 @@
 	margin-bottom: 5px;
 }
 
+.centerAlign{
+	text-align: center;
+}
+
 .hiddenWidget{
 	visibility: hidden;
 }

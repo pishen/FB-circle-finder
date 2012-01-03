@@ -6,13 +6,8 @@ import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 
 public class BPRTester {
-	public static BPRTester currentTester;
 	private List<FBUser> circleList;
 	private List<FBUser> friendsList;
-	
-	public BPRTester(){
-		BPRTester.currentTester = this;
-	}
 	
 	public void init(){
 		circleList = MainPage.currentPage.getCircleList();
