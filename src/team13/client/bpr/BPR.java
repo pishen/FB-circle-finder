@@ -1,17 +1,17 @@
 package team13.client.bpr;
 import java.util.*;
 
-class BPR{
+public class BPR{
 	
-	final static int K=20;
-	final static double NOISE_LEVEL=1e-4;
-	final static double LEARN_RATE=0.01;
-	final static double LAMBDA=1e-6;
-	static Random ran = new Random();
+	protected final static int K=20;
+	protected final static double NOISE_LEVEL=1e-4;
+	protected final static double LEARN_RATE=0.01;
+	protected final static double LAMBDA=1e-6;
+	protected static Random ran = new Random();
 	
-	Map<String,Vector> features = new HashMap<String,Vector>();
-	Map<String,Integer> entity_types = new HashMap<String,Integer>();
-	Map<Integer,List<String>> type_entities = new HashMap<Integer,List<String>>();
+	protected Map<String,Vector> features = new HashMap<String,Vector>();
+	protected Map<String,Integer> entity_types = new HashMap<String,Integer>();
+	protected Map<Integer,List<String>> type_entities = new HashMap<Integer,List<String>>();
 	
 	public BPR(){
 	}
@@ -21,11 +21,11 @@ class BPR{
 		addAll(bpr);
 	}
 	
-	public boolean containsEntity(String e){
+	protected boolean containsEntity(String e){
 		return entity_types.containsKey(e);
 	}
 
-	public void addAll(BPR bpr){
+	protected void addAll(BPR bpr){
 		
 		features.putAll(bpr.features);
 		entity_types.putAll(bpr.entity_types);
@@ -37,12 +37,12 @@ class BPR{
 		}
 	}
 
-	double logistic(double score){
+	protected double logistic(double score){
 		
 		return 1.0/(1+Math.exp(-score));
 	}
 	
-	String drawNegative( Collection<String> tuple, Integer type){ 
+	protected String drawNegative( Collection<String> tuple, Integer type){ 
 		
 		String neg_example;
 		List<String> list;
@@ -55,8 +55,8 @@ class BPR{
 		return neg_example;
 	}
 	
-	int iteration=100;
-	Vector cooccurFea( Collection<String> occur ){
+	private int iteration=100;
+	protected Vector cooccurFea( Collection<String> occur ){
 		
 		Vector[] posFeas = new Vector[occur.size()];
 		Integer[] types = new Integer[occur.size()];

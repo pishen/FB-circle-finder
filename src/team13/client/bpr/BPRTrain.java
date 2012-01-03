@@ -3,9 +3,9 @@ import java.util.*;
 
 public class BPRTrain extends BPR {
 		
-	List<List<String>> tuples = new ArrayList<List<String>>();
+	private List<List<String>> tuples = new ArrayList<List<String>>();
 	
-	void addEntity(String entity,Integer type){
+	public void addEntity(String entity,Integer type){
 		
 		if(!type_entities.containsKey(type)){
 			type_entities.put(type,new ArrayList<String>());
@@ -17,12 +17,12 @@ public class BPRTrain extends BPR {
 		features.put(entity, Vector.zeros(K).add(noise));
 	}
 
-	void addData(List<String> tuple){
+	public void addData(List<String> tuple){
 		
 		tuples.add(tuple);
 	}
 	
-	double predErr( List<String> tuple ){
+	private double predErr( List<String> tuple ){
 		
 		Vector leadFea = features.get(tuple.get(0));
 		
@@ -51,7 +51,7 @@ public class BPRTrain extends BPR {
 	}
 
 	//update with tuple[0] as  leading entity
-	void updateFeature( List<String> tuple ){
+	private void updateFeature( List<String> tuple ){
 		
 		Vector leadFea = features.get(tuple.get(0));
 		
@@ -113,7 +113,7 @@ public class BPRTrain extends BPR {
 		}
 	}
 	
-	final static int NUM_SAMPLES=100;
+	private final static int NUM_SAMPLES=100;
 	public double sampleTrainErr(){
 		
 		int r;
@@ -126,7 +126,7 @@ public class BPRTrain extends BPR {
 	}
 
 	/*
-	//問題，posSum和negSum should be weighted by prediction error
+	//PROBLEM，posSum和negSum should be weighted by prediction error
 	void updateFeature2( List<String> tuple ){
 		
 		Integer type;
