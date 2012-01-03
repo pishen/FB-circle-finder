@@ -127,6 +127,7 @@ public class MainPage implements EntryPoint {
 		statusTable.addStyleName("statusTable");
 		statusTable.getCellFormatter().addStyleName(0, 0, "centerAlign");
 		statusTable.getCellFormatter().addStyleName(1, 0, "centerAlign");
+		//this function is not working, may be a bug.
 		//statusTable.getColumnFormatter().setStyleName(0, "centerAlign");
 		
 		mainPanel.add(errorMsgLabel);
