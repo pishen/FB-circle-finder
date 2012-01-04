@@ -1,5 +1,10 @@
 package team13.client.bpr;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class BPRQuery extends BPR{
 	
@@ -52,6 +57,7 @@ public class BPRQuery extends BPR{
 	public List<String> query(Collection<String> query,Integer type){
 		
 		Vector qfea ;
+		
 		qfea = cooccurFea(query);
 		/*
 		qfea = Vector.zeros(K);

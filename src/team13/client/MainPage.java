@@ -17,6 +17,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.view.client.SingleSelectionModel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -41,6 +42,7 @@ public class MainPage implements EntryPoint {
 	private VerticalPanel mainPanel = new VerticalPanel();
 	private ListDataProvider<FBUser> circleProvider = new ListDataProvider<FBUser>();
 	private ListDataProvider<FBUser> friendsProvider = new ListDataProvider<FBUser>();
+	private SingleSelectionModel<FBUser> selectionModel = new SingleSelectionModel<FBUser>();
 	
 	private FBFetcher fbFetcher = new FBFetcher();
 	private BPRTester bprTester = new BPRTester();
@@ -70,6 +72,7 @@ public class MainPage implements EntryPoint {
 		if(fbFetcher.isFetchFinished()){
 			bprTester.init();
 			setStatus("finished initializing", true);
+			addButton.setEnabled(true);
 		}
 	}
 	
@@ -99,6 +102,15 @@ public class MainPage implements EntryPoint {
 				}
 			}
 		});
+		
+		addButton.addClickHandler(new ClickHandler(){
+			@Override
+			public void onClick(ClickEvent event) {
+				bprTester.addSelectedAndPredict(selectionModel.getSelectedObject());
+			}
+		});
+		
+		friendsCellList.setSelectionModel(selectionModel);
 		
 		circleProvider.addDataDisplay(circleCellList);
 		friendsProvider.addDataDisplay(friendsCellList);

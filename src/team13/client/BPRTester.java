@@ -33,19 +33,33 @@ public class BPRTester {
 		derivePhotosInfo();
 		
 		//TODO change to async
-		bprTrain.trainUniform(1);
+		bprTrain.trainUniform(50*5000);
 		//
 		
-		//bprQuery = new BPRQuery(bprTrain);
+		bprQuery = new BPRQuery(bprTrain);
 		
-		//predictFriendsList(Arrays.asList(meId));
+		predictFriendsList(Arrays.asList(meId));
 	}
 	
-	public void predictFriendsList(List<String> queryList){
+	public void addSelectedAndPredict(FBUser selectedFBUser){
+		circleList.add(selectedFBUser);
+		List<String> queryList = new ArrayList<String>();
+		for(FBUser fbUser: circleList){
+			queryList.add(fbUser.getId());
+		}
+		predictFriendsList(queryList);
+	}
+
+	private void predictFriendsList(List<String> queryList){
 		//prediction
-		List<String> predictStrList = bprQuery.query(queryList.get(0), EntityType.USER.ordinal());
+		List<String> predictStrList = bprQuery.query(queryList, EntityType.USER.ordinal());
+		List<String> list2= new ArrayList<String>();
+		for(int i=0;i<25;i++)
+			list2.add(predictStrList.get(i));
+		predictStrList = list2;
 		//
 		friendsList.clear();
+
 		for(String userId: predictStrList){
 			friendsList.add(userMap.get(userId));
 		}
@@ -90,11 +104,11 @@ public class BPRTester {
 			//TODO can tags be null?
 			boolean photoAdded = false;
 			ArrayList<String> dataList = null;
-			JSONObject tagsJObject = photoJObject.get("tags").isObject();
+			JSONObject tagsJObject = photoJObject.get("tags").isObject(); //TODO check get('tag')
 			JSONArray tagsJArray = tagsJObject.get("data").isArray();
 			
 			for(int j = 0; j < tagsJArray.size(); j++){
-				JSONObject tagJObject = tagsJArray.get(i).isObject();
+				JSONObject tagJObject = tagsJArray.get(j).isObject();
 				String userId = tagJObject.get("id").isString().stringValue();
 				if(userMap.containsKey(userId)){
 					if(photoAdded == false){
@@ -111,17 +125,5 @@ public class BPRTester {
 			}
 		}
 	}
-	
-	private void fillFriendsList(){
-		JSONObject friendsJObject = FBFetcher.currentFetcher.getJSON("friends");
-		JSONArray friendsJArray = friendsJObject.get("data").isArray();
-		
-		for(int i = 0; i < friendsJArray.size(); i++){
-			JSONObject friendJObject = friendsJArray.get(i).isObject();
-			String id = friendJObject.get("id").isString().stringValue();
-			String name = friendJObject.get("name").isString().stringValue();
-			FBUser friend = new FBUser(id, name);
-			friendsList.add(friend);
-		}
-	}
+
 }

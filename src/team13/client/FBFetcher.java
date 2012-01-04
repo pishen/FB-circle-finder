@@ -23,7 +23,7 @@ public class FBFetcher {
 	
 	public void loginFB(){
 		String loginURL = "https://www.facebook.com/dialog/oauth?client_id=195431067216915&redirect_uri="
-				+ Window.Location.getHref() + "&response_type=token";
+				+ Window.Location.getHref() + "&scope=user_photos,user_status&response_type=token";
 		Window.Location.replace(loginURL);
 	}
 	
@@ -52,8 +52,8 @@ public class FBFetcher {
 		
 		String meURL = "https://graph.facebook.com/me?fields=id,name&access_token=" + accessToken;
 		String friendsURL = "https://graph.facebook.com/me/friends?access_token=" + accessToken;
-		String photosURL = "https://graph.facebook.com/me/photos?access_token=" + accessToken;
-		String statusesURL = "https://graph.facebook.com/me/statuses?access_token=" + accessToken;
+		String photosURL = "https://graph.facebook.com/me/photos?limit=0&access_token=" + accessToken;
+		String statusesURL = "https://graph.facebook.com/me/statuses?limit=0&access_token=" + accessToken;
 		
 		requestJSON("me", meURL);
 		requestJSON("friends", friendsURL);

@@ -11,7 +11,7 @@ public class BPR{
 	
 	protected Map<String,Vector> features = new HashMap<String,Vector>();
 	protected Map<String,Integer> entity_types = new HashMap<String,Integer>();
-	protected Map<Integer,List<String>> type_entities = new HashMap<Integer,List<String>>();
+	public Map<Integer,List<String>> type_entities = new HashMap<Integer,List<String>>();
 	
 	public BPR(){
 	}
@@ -55,7 +55,7 @@ public class BPR{
 		return neg_example;
 	}
 	
-	private int iteration=100;
+	private int iteration=10000;
 	protected Vector cooccurFea( Collection<String> occur ){
 		
 		Vector[] posFeas = new Vector[occur.size()];
