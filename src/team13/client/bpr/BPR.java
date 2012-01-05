@@ -3,7 +3,7 @@ import java.util.*;
 
 public class BPR{
 	
-	protected final static int K=20;
+	protected final static int K=100;
 	protected final static double NOISE_LEVEL=1e-4;
 	protected final static double LEARN_RATE=0.01;
 	protected final static double LAMBDA=1e-6;

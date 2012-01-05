@@ -5,6 +5,8 @@ import java.util.List;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.ScrollEvent;
+import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
@@ -29,6 +31,7 @@ public class MainPage implements EntryPoint {
 	
 	private Button authenticButton = new Button("Login");
 	private Button addButton = new Button("<");
+	private Button removeButton = new Button(">");
 	private Label errorMsgLabel = new Label();
 	private Label hintLabel = new Label();
 	private Image runningBar = new Image("images/running.gif");
@@ -39,11 +42,15 @@ public class MainPage implements EntryPoint {
 	private ScrollPanel friendsPanel = new ScrollPanel();
 	private FlexTable statusTable = new FlexTable();
 	private FlexTable twoListTable = new FlexTable();
+	private FlexTable buttonTable = new FlexTable();
 	private VerticalPanel mainPanel = new VerticalPanel();
 	private ListDataProvider<FBUser> circleProvider = new ListDataProvider<FBUser>();
 	private ListDataProvider<FBUser> friendsProvider = new ListDataProvider<FBUser>();
 	private SingleSelectionModel<FBUser> circleSelectionModel = new SingleSelectionModel<FBUser>();
 	private SingleSelectionModel<FBUser> friendsSelectionModel = new SingleSelectionModel<FBUser>();
+	
+	private int lastScrollPos;
+	private static final int DEFAULT_INCREMENT = 20; 
 	
 	private FBFetcher fbFetcher = new FBFetcher();
 	private BPRTester bprTester = new BPRTester();
@@ -77,14 +84,6 @@ public class MainPage implements EntryPoint {
 		}
 	}
 	
-	public void setAddEnabled(boolean enabled){
-		addButton.setEnabled(enabled);
-	}
-	
-	public void setStart(){
-		friendsCellList.setPageStart(0);
-	}
-	
 	private void initUI(){
 		if(!loggedIn){
 			hintLabel.setText("Please login as your Facebook account -> ");
@@ -99,6 +98,7 @@ public class MainPage implements EntryPoint {
 		errorMsgLabel.addStyleName("errorMessage");
 		
 		addButton.setEnabled(false);
+		removeButton.setEnabled(false);
 		
 		authenticButton.addClickHandler(new ClickHandler(){
 			@Override
@@ -115,6 +115,13 @@ public class MainPage implements EntryPoint {
 			@Override
 			public void onClick(ClickEvent event) {
 				bprTester.addSelectedAndPredict(friendsSelectionModel.getSelectedObject());
+			}
+		});
+		
+		removeButton.addClickHandler(new ClickHandler(){
+			@Override
+			public void onClick(ClickEvent event) {
+				bprTester.removeSelectedAndPredict(circleSelectionModel.getSelectedObject());
 			}
 		});
 		
@@ -135,12 +142,37 @@ public class MainPage implements EntryPoint {
 		circlePanel.addStyleName("scrollPanel");
 		
 		friendsPanel.add(friendsCellList);
+		//let cellList enlarge when scrolling to bottom
+		friendsPanel.addScrollHandler(new ScrollHandler(){
+			@Override
+			public void onScroll(ScrollEvent event) {
+				// If scrolling up, ignore the event.
+		        int oldScrollPos = lastScrollPos;
+		        lastScrollPos = friendsPanel.getVerticalScrollPosition();
+		        if (oldScrollPos >= lastScrollPos) {
+		          return;
+		        }
+
+		        int maxScrollTop = friendsPanel.getWidget().getOffsetHeight()
+		            - friendsPanel.getOffsetHeight();
+		        if (lastScrollPos >= maxScrollTop) {
+		          // We are near the end, so increase the page size.
+		          int newPageSize = Math.min(
+		        		  friendsCellList.getVisibleRange().getLength() + DEFAULT_INCREMENT,
+		        		  friendsCellList.getRowCount());
+		          friendsCellList.setVisibleRange(0, newPageSize);
+		        }
+			}
+		});
 		friendsPanel.addStyleName("scrollPanel");
 		
+		buttonTable.setWidget(0, 0, addButton);
+		buttonTable.setWidget(1, 0, removeButton);
+		
 		twoListTable.setText(0, 0, "Circle");
-		twoListTable.setText(0, 2, "Friends");
+		twoListTable.setText(0, 2, "Suggested Friends");
 		twoListTable.setWidget(1, 0, circlePanel);
-		twoListTable.setWidget(1, 1, addButton);
+		twoListTable.setWidget(1, 1, buttonTable);
 		twoListTable.setWidget(1, 2, friendsPanel);
 		
 		statusTable.setWidget(1, 0, runningBar);
@@ -166,6 +198,17 @@ public class MainPage implements EntryPoint {
 		}else{
 			statusTable.getCellFormatter().removeStyleName(1, 0, "hiddenWidget");
 		}
+	}
+	
+	public void setAddRemoveButtonEnabled(boolean enabled){
+		addButton.setEnabled(enabled);
+		removeButton.setEnabled(enabled);
+	}
+	
+	public void resetFriendsCellListStatus(){
+		friendsCellList.setPageSize(25);
+		friendsCellList.setPageStart(0);
+		friendsPanel.setVerticalScrollPosition(0);
 	}
 	
 	public void displayError(String error){

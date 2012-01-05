@@ -19,13 +19,20 @@ public class BPRTester {
 	private String meId;
 	
 	private BPRTrain bprTrain = new BPRTrain();
-	private int currentIteration, totalIteration;
+	private int currentTrain, totalTrain;
 	private BPRQuery bprQuery;
 	
 	private Timer trainingTimer;
-	private boolean canceled;
-	private static final int TRAIN_INTERVAL = 5; //ms
-	private static final int ITER_PER_TRAIN = 100;
+	private boolean trainingTimerCanceled;
+	private static final int TIMER_INTERVAL = 5; //ms
+	private static final int TRAIN_PER_ITER = 100;
+	private static final int STATUS_PER_ITER = 5;
+	
+	private Timer statusesTimer;
+	private boolean statusesTimerCanceled;
+	private JSONArray statusesJArray;
+	private int addedStatusCount;
+	private int currentStatus;
 	
 	private enum EntityType{
 		USER, PHOTO, QUERY, STATUS
@@ -38,30 +45,32 @@ public class BPRTester {
 		deriveMeInfo();
 		deriveFriendsInfo();
 		derivePhotosInfo();
-		deriveStatusesInfo();
-		
-		totalIteration = 250000;
+		deriveStatusesInfo(); //will trigger a timer
+	}
+	
+	private void train(){
+		//TODO how many iter should be enough?
+		totalTrain = 250000;
 
 		trainingTimer = new Timer(){
 			@Override
 			public void run() {
-				train();
+				trainIter();
 			}
 		};
-		trainingTimer.scheduleRepeating(TRAIN_INTERVAL);
-		canceled = false;
-		
+		trainingTimer.scheduleRepeating(TIMER_INTERVAL);
+		trainingTimerCanceled = false;
 	}
 	
-	private void train(){
-		if(currentIteration < totalIteration){
-			currentIteration += ITER_PER_TRAIN;
-			MainPage.currentPage.setStatus("training..." + currentIteration + "/" + totalIteration, false);
-			bprTrain.trainUniform(ITER_PER_TRAIN);
-		}else if(!canceled){
+	private void trainIter(){
+		if(currentTrain < totalTrain){
+			currentTrain += TRAIN_PER_ITER;
+			MainPage.currentPage.setStatus("training..." + currentTrain + "/" + totalTrain, false);
+			bprTrain.trainUniform(TRAIN_PER_ITER);
+		}else if(!trainingTimerCanceled){
 			trainingTimer.cancel();
-			canceled = true;
-			//fire first prediction
+			trainingTimerCanceled = true;
+			//trigger first prediction
 			bprQuery = new BPRQuery(bprTrain);
 			predictFriendsList();
 		}
@@ -72,10 +81,19 @@ public class BPRTester {
 		predictFriendsList();
 	}
 	
-	//TODO change to async
+	public void removeSelectedAndPredict(FBUser selectedFBUser){
+		if(selectedFBUser.getId().equals(meId) == false){
+			circleList.remove(selectedFBUser);
+			predictFriendsList();
+		}
+	}
+	
+	//TODO change to async would require modifying BPRQuery.query()
 	private void predictFriendsList(){
-		MainPage.currentPage.setAddEnabled(false);
-		MainPage.currentPage.setStatus("predicting...", false);
+		//can't work until changing to async
+		//MainPage.currentPage.setAddRemoveButtonEnabled(false);
+		//MainPage.currentPage.setStatus("predicting...", false);
+		//
 		
 		//create query
 		List<String> queryList = new ArrayList<String>();
@@ -84,14 +102,7 @@ public class BPRTester {
 		}
 		
 		//prediction
-		//TODO fix adding policy
 		List<String> predictStrList = bprQuery.query(queryList, EntityType.USER.ordinal());
-		/*
-		List<String> list2= new ArrayList<String>();
-		for(int i=0;i<25;i++)
-			list2.add(predictStrList.get(i));
-		predictStrList = list2;
-		*/
 		
 		//add result to friend list
 		friendsList.clear();
@@ -100,8 +111,9 @@ public class BPRTester {
 			friendsList.add(userMap.get(userId));
 		}
 		
-		MainPage.currentPage.setStart(); //TODO fix
-		MainPage.currentPage.setAddEnabled(true);
+		MainPage.currentPage.resetFriendsCellListStatus();
+		
+		MainPage.currentPage.setAddRemoveButtonEnabled(true);
 		MainPage.currentPage.setStatus("finish predicting", true);
 	}
 	
@@ -170,7 +182,6 @@ public class BPRTester {
 			if(photoAdded){
 				bprTrain.addEntity(photoId, EntityType.PHOTO.ordinal());
 				bprTrain.addData(dataList);
-				
 				addedPhotoCount++;
 			}
 			
@@ -183,13 +194,38 @@ public class BPRTester {
 	
 	private void deriveStatusesInfo(){
 		JSONObject statusesJObject = FBFetcher.currentFetcher.getJSON("statuses");
-		JSONArray statusesJArray = statusesJObject.get("data").isArray();
+		statusesJArray = statusesJObject.get("data").isArray();
 		
-		int addedStatusCount = 0;
+		addedStatusCount = 0;
 		
-		//go through each status message
-		for(int i = 0; i < statusesJArray.size(); i++){
-			JSONObject statusJObject = statusesJArray.get(i).isObject();
+		statusesTimer = new Timer(){
+			@Override
+			public void run() {
+				//MainPage.currentPage.setStatus("deriving status..." + currentStatus + "/" + statusesJArray.size(), false);
+				for(int i = 0; i < STATUS_PER_ITER; i++){
+					deriveStatusInfo();
+				}
+			}
+		};
+		statusesTimer.scheduleRepeating(TIMER_INTERVAL);
+		statusesTimerCanceled = false;
+	}
+	
+	private void deriveStatusInfo(){
+		if(currentStatus >= statusesJArray.size()){
+			if(statusesTimerCanceled == false){
+				//deriving finished
+				statusesTimer.cancel();
+				statusesTimerCanceled = true;
+				//
+				if(addedStatusCount == 0){
+					Window.alert("You have no status message.");
+				}
+				//trigger BPR training
+				train();
+			}
+		}else{
+			JSONObject statusJObject = statusesJArray.get(currentStatus).isObject();
 			String statusId = statusJObject.get("id").isString().stringValue();
 			
 			boolean statusAdded = false;
@@ -238,14 +274,10 @@ public class BPRTester {
 			if(statusAdded){
 				bprTrain.addEntity(statusId, EntityType.STATUS.ordinal());
 				bprTrain.addData(dataList);
-				
 				addedStatusCount++;
 			}
-		}
-		
-		if(addedStatusCount == 0){
-			Window.alert("You have no status message.");
+			
+			currentStatus++;
 		}
 	}
-
 }
