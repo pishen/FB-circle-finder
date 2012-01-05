@@ -63,6 +63,7 @@ public class MainPage implements EntryPoint {
 		initUI();
 		
 		if(loggedIn){
+			setStatus("fetching JSON...", false);
 			fbFetcher.fetchNeededJSON();
 		}
 		
@@ -70,14 +71,17 @@ public class MainPage implements EntryPoint {
 	
 	public void checkJSON(){
 		if(fbFetcher.isFetchFinished()){
+			setStatus("initializing BPR...", false);
+			
 			bprTester.init();
-			setStatus("finished initializing", true);
-			addButton.setEnabled(true);
 		}
 	}
 	
+	public void setAddEnabled(boolean enabled){
+		addButton.setEnabled(enabled);
+	}
+	
 	private void initUI(){
-		//setup UI property
 		if(!loggedIn){
 			hintLabel.setText("Please login as your Facebook account -> ");
 			statusTable.addStyleName("hiddenWidget");
@@ -134,7 +138,6 @@ public class MainPage implements EntryPoint {
 		twoListTable.setWidget(1, 1, addButton);
 		twoListTable.setWidget(1, 2, friendsPanel);
 		
-		statusTable.setText(0, 0, "initializing...");
 		statusTable.setWidget(1, 0, runningBar);
 		statusTable.addStyleName("statusTable");
 		statusTable.getCellFormatter().addStyleName(0, 0, "centerAlign");

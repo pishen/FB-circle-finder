@@ -1,7 +1,6 @@
 package team13.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,6 +9,7 @@ import team13.client.bpr.BPRTrain;
 
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.user.client.Timer;
 
 public class BPRTester {
 	private List<FBUser> circleList;
@@ -18,7 +18,12 @@ public class BPRTester {
 	private String meId;
 	
 	private BPRTrain bprTrain = new BPRTrain();
+	private int currentIteration, totalIteration;
 	private BPRQuery bprQuery;
+	
+	private Timer trainingTimer;
+	private boolean canceled;
+	private static final int TRAIN_INTERVAL = 5; //ms
 	
 	private enum EntityType{
 		USER, PHOTO, QUERY, POST
@@ -32,37 +37,64 @@ public class BPRTester {
 		deriveFriendsInfo();
 		derivePhotosInfo();
 		
-		//TODO change to async
-		bprTrain.trainUniform(50*5000);
-		//
+		totalIteration = 250000;
+
+		trainingTimer = new Timer(){
+			@Override
+			public void run() {
+				train();
+			}
+		};
+		trainingTimer.scheduleRepeating(TRAIN_INTERVAL);
+		canceled = false;
 		
-		bprQuery = new BPRQuery(bprTrain);
-		
-		predictFriendsList(Arrays.asList(meId));
+	}
+	
+	private void train(){
+		if(currentIteration < totalIteration){
+			currentIteration += 100;
+			MainPage.currentPage.setStatus("training..." + currentIteration + "/" + totalIteration, false);
+			bprTrain.trainUniform(100);
+		}else if(!canceled){
+			trainingTimer.cancel();
+			canceled = true;
+			//fire first prediction
+			bprQuery = new BPRQuery(bprTrain);
+			predictFriendsList();
+		}
 	}
 	
 	public void addSelectedAndPredict(FBUser selectedFBUser){
 		circleList.add(selectedFBUser);
+		predictFriendsList();
+	}
+
+	private void predictFriendsList(){
+		MainPage.currentPage.setAddEnabled(false);
+		MainPage.currentPage.setStatus("predicting...", false);
+		
+		//create query
 		List<String> queryList = new ArrayList<String>();
 		for(FBUser fbUser: circleList){
 			queryList.add(fbUser.getId());
 		}
-		predictFriendsList(queryList);
-	}
-
-	private void predictFriendsList(List<String> queryList){
+		
 		//prediction
 		List<String> predictStrList = bprQuery.query(queryList, EntityType.USER.ordinal());
 		List<String> list2= new ArrayList<String>();
 		for(int i=0;i<25;i++)
 			list2.add(predictStrList.get(i));
 		predictStrList = list2;
-		//
+		
+		//add result to friend list
 		friendsList.clear();
 
 		for(String userId: predictStrList){
 			friendsList.add(userMap.get(userId));
 		}
+		
+		MainPage.currentPage.setAddEnabled(true);
+		MainPage.currentPage.setStatus("finish predicting", true);
 	}
 	
 	private void deriveMeInfo(){
