@@ -42,7 +42,8 @@ public class MainPage implements EntryPoint {
 	private VerticalPanel mainPanel = new VerticalPanel();
 	private ListDataProvider<FBUser> circleProvider = new ListDataProvider<FBUser>();
 	private ListDataProvider<FBUser> friendsProvider = new ListDataProvider<FBUser>();
-	private SingleSelectionModel<FBUser> selectionModel = new SingleSelectionModel<FBUser>();
+	private SingleSelectionModel<FBUser> circleSelectionModel = new SingleSelectionModel<FBUser>();
+	private SingleSelectionModel<FBUser> friendsSelectionModel = new SingleSelectionModel<FBUser>();
 	
 	private FBFetcher fbFetcher = new FBFetcher();
 	private BPRTester bprTester = new BPRTester();
@@ -72,13 +73,16 @@ public class MainPage implements EntryPoint {
 	public void checkJSON(){
 		if(fbFetcher.isFetchFinished()){
 			setStatus("initializing BPR...", false);
-			
 			bprTester.init();
 		}
 	}
 	
 	public void setAddEnabled(boolean enabled){
 		addButton.setEnabled(enabled);
+	}
+	
+	public void setStart(){
+		friendsCellList.setPageStart(0);
 	}
 	
 	private void initUI(){
@@ -110,11 +114,12 @@ public class MainPage implements EntryPoint {
 		addButton.addClickHandler(new ClickHandler(){
 			@Override
 			public void onClick(ClickEvent event) {
-				bprTester.addSelectedAndPredict(selectionModel.getSelectedObject());
+				bprTester.addSelectedAndPredict(friendsSelectionModel.getSelectedObject());
 			}
 		});
 		
-		friendsCellList.setSelectionModel(selectionModel);
+		circleCellList.setSelectionModel(circleSelectionModel);
+		friendsCellList.setSelectionModel(friendsSelectionModel);
 		
 		circleProvider.addDataDisplay(circleCellList);
 		friendsProvider.addDataDisplay(friendsCellList);
