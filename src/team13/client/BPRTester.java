@@ -19,13 +19,14 @@ public class BPRTester {
 	private String meId;
 	
 	private BPRTrain bprTrain = new BPRTrain();
-	private int currentTrain, totalTrain;
+	private int currentTrain; 
+	//private int totalTrain;
 	private BPRQuery bprQuery;
 	
 	private Timer trainingTimer;
 	private boolean trainingTimerCanceled;
 	private static final int TIMER_INTERVAL = 5; //ms
-	private static final int TRAIN_PER_ITER = 100;
+	private static final int TRAIN_PER_ITER = 10;
 	private static final int STATUS_PER_ITER = 5;
 	
 	private Timer statusesTimer;
@@ -48,31 +49,37 @@ public class BPRTester {
 		deriveStatusesInfo(); //will trigger a timer
 	}
 	
-	private void train(){
+	public void startTraining(){
 		//TODO how many iter should be enough?
-		totalTrain = 250000;
+		//totalTrain = 100000;
 
-		trainingTimer = new Timer(){
-			@Override
-			public void run() {
-				trainIter();
-			}
-		};
+		if(trainingTimer == null){
+			trainingTimer = new Timer(){
+				@Override
+				public void run() {
+					trainIter();
+				}
+			};
+		}
 		trainingTimer.scheduleRepeating(TIMER_INTERVAL);
 		trainingTimerCanceled = false;
+		MainPage.currentPage.setAddRemoveButtonEnabled(false);
+	}
+	
+	public void stopTraining(){
+		trainingTimer.cancel();
+		trainingTimerCanceled = true;
+		MainPage.currentPage.setStatus("training stopped at iteration " + currentTrain, true);
+		//trigger new prediction
+		bprQuery = new BPRQuery(bprTrain);
+		predictFriendsList();
 	}
 	
 	private void trainIter(){
-		if(currentTrain < totalTrain){
+		if(trainingTimerCanceled == false){
 			currentTrain += TRAIN_PER_ITER;
-			MainPage.currentPage.setStatus("training..." + currentTrain + "/" + totalTrain, false);
+			MainPage.currentPage.setStatus("training for iteration " + currentTrain, false);
 			bprTrain.trainUniform(TRAIN_PER_ITER);
-		}else if(!trainingTimerCanceled){
-			trainingTimer.cancel();
-			trainingTimerCanceled = true;
-			//trigger first prediction
-			bprQuery = new BPRQuery(bprTrain);
-			predictFriendsList();
 		}
 	}
 	
@@ -221,8 +228,9 @@ public class BPRTester {
 				if(addedStatusCount == 0){
 					Window.alert("You have no status message.");
 				}
-				//trigger BPR training
-				train();
+				//enable training button
+				MainPage.currentPage.setStatus("", true);
+				MainPage.currentPage.enableTraining();
 			}
 		}else{
 			JSONObject statusJObject = statusesJArray.get(currentStatus).isObject();

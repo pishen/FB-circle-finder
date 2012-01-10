@@ -11,8 +11,7 @@ import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.HasVerticalAlignment;
-import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -32,17 +31,18 @@ public class MainPage implements EntryPoint {
 	private Button authenticButton = new Button("Login");
 	private Button addButton = new Button("<");
 	private Button removeButton = new Button(">");
+	private Button trainButton = new Button("Start");
 	private Label errorMsgLabel = new Label();
-	private Label hintLabel = new Label();
+	private HTML hintHTML = new HTML();
 	private Image runningBar = new Image("images/running.gif");
 	private CellList<FBUser> circleCellList = new CellList<FBUser>(new FBUserCell());
 	private CellList<FBUser> friendsCellList = new CellList<FBUser>(new FBUserCell());
-	private HorizontalPanel loginPanel = new HorizontalPanel();
-	private ScrollPanel circlePanel = new ScrollPanel();
-	private ScrollPanel friendsPanel = new ScrollPanel();
+	private FlexTable topTable = new FlexTable();
 	private FlexTable statusTable = new FlexTable();
 	private FlexTable twoListTable = new FlexTable();
 	private FlexTable buttonTable = new FlexTable();
+	private ScrollPanel circlePanel = new ScrollPanel();
+	private ScrollPanel friendsPanel = new ScrollPanel();
 	private VerticalPanel mainPanel = new VerticalPanel();
 	private ListDataProvider<FBUser> circleProvider = new ListDataProvider<FBUser>();
 	private ListDataProvider<FBUser> friendsProvider = new ListDataProvider<FBUser>();
@@ -55,6 +55,7 @@ public class MainPage implements EntryPoint {
 	private FBFetcher fbFetcher = new FBFetcher();
 	private BPRTester bprTester = new BPRTester();
 	private boolean loggedIn;
+	private boolean isTraining = false;
 	
 	/**
 	 * This is the entry point method.
@@ -86,12 +87,14 @@ public class MainPage implements EntryPoint {
 	
 	private void initUI(){
 		if(!loggedIn){
-			hintLabel.setText("Please login as your Facebook account -> ");
+			hintHTML.setHTML("Please login as your Facebook account &rarr; ");
+			trainButton.setVisible(false);
 			statusTable.addStyleName("hiddenWidget");
 		}else{
-			hintLabel.setVisible(false);
+			hintHTML.setHTML("Run BPR training (suggested iterations: 250000) &rarr; ");
+			hintHTML.setVisible(false);
+			trainButton.setVisible(false);
 			authenticButton.setText("Logout");
-			//authenticButton.setEnabled(false);
 		}
 		
 		errorMsgLabel.setVisible(false);
@@ -107,6 +110,21 @@ public class MainPage implements EntryPoint {
 					fbFetcher.loginFB();
 				}else{
 					fbFetcher.logoutFB();
+				}
+			}
+		});
+		
+		trainButton.addClickHandler(new ClickHandler(){
+			@Override
+			public void onClick(ClickEvent event) {
+				if(isTraining == false){
+					isTraining = true;
+					trainButton.setText("Stop");
+					bprTester.startTraining();
+				}else{
+					isTraining = false;
+					trainButton.setText("Start");
+					bprTester.stopTraining();
 				}
 			}
 		});
@@ -130,13 +148,11 @@ public class MainPage implements EntryPoint {
 		
 		circleProvider.addDataDisplay(circleCellList);
 		friendsProvider.addDataDisplay(friendsCellList);
-		
-		hintLabel.addStyleName("hintLabel");
 
-		loginPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
-		loginPanel.add(hintLabel);
-		loginPanel.add(authenticButton);
-		loginPanel.addStyleName("loginPanel");
+		topTable.setWidget(0, 0, hintHTML);
+		topTable.setWidget(0, 1, trainButton);
+		topTable.setWidget(0, 2, authenticButton);
+		topTable.addStyleName("topTable");
 		
 		circlePanel.add(circleCellList);
 		circlePanel.addStyleName("scrollPanel");
@@ -183,7 +199,7 @@ public class MainPage implements EntryPoint {
 		//statusTable.getColumnFormatter().setStyleName(0, "centerAlign");
 		
 		mainPanel.add(errorMsgLabel);
-		mainPanel.add(loginPanel);
+		mainPanel.add(topTable);
 		mainPanel.add(statusTable);
 		mainPanel.add(twoListTable);
 		mainPanel.addStyleName("mainPanel");
@@ -203,6 +219,11 @@ public class MainPage implements EntryPoint {
 	public void setAddRemoveButtonEnabled(boolean enabled){
 		addButton.setEnabled(enabled);
 		removeButton.setEnabled(enabled);
+	}
+	
+	public void enableTraining(){
+		hintHTML.setVisible(true);
+		trainButton.setVisible(true);
 	}
 	
 	public void resetFriendsCellListStatus(){
