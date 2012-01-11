@@ -55,11 +55,16 @@ public class BPR{
 		return neg_example;
 	}
 	
-	private int iteration=10000;
-	protected Vector cooccurFea( Collection<String> occur ){
+	//private int iteration=10000;
+	private Vector[] posFeas;
+	private Integer[] types;
+	private Collection<String> occur;
+	protected Vector qfea;
+	protected void initCooccurFea( Collection<String> occur ){
+		this.occur = occur;
 		
-		Vector[] posFeas = new Vector[occur.size()];
-		Integer[] types = new Integer[occur.size()];
+		posFeas = new Vector[occur.size()];
+		types = new Integer[occur.size()];
 		int k=0;
 		for(String id: occur){
 			posFeas[k] = features.get(id);
@@ -67,21 +72,20 @@ public class BPR{
 			k++;
 		}
 		
-		Vector negFea,posFea ;
-		Vector qfea = Vector.zeros(K);
-		double err;
-		for(int i=0;i<iteration;i++){
-			for(int j=0;j<posFeas.length;j++){
-				
-				posFea = posFeas[j];
-				negFea = features.get( drawNegative( occur, types[j] ) );
-				err = 1-logistic(qfea.dot(posFea) - qfea.dot(negFea));
-				
-				qfea = qfea.add( posFea.sub(negFea).mul(err).sub( qfea.mul(LAMBDA) ).mul(LEARN_RATE) );
-			}
+		qfea = Vector.zeros(K);
+	}
+	
+	protected void cooccurFeaIter(){
+		for(int j=0;j<posFeas.length;j++){
+			Vector negFea, posFea;
+			double err;
+			
+			posFea = posFeas[j];
+			negFea = features.get( drawNegative( occur, types[j] ) );
+			err = 1-logistic(qfea.dot(posFea) - qfea.dot(negFea));
+			
+			qfea = qfea.add( posFea.sub(negFea).mul(err).sub( qfea.mul(LAMBDA) ).mul(LEARN_RATE) );
 		}
-
-		return qfea;
 	}
 }
 	

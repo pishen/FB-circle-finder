@@ -226,6 +226,10 @@ public class MainPage implements EntryPoint {
 		trainButton.setVisible(true);
 	}
 	
+	public void setTrainButtonEnabled(boolean enabled){
+		trainButton.setEnabled(enabled);
+	}
+	
 	public void resetFriendsCellListStatus(){
 		friendsCellList.setPageSize(25);
 		friendsCellList.setPageStart(0);

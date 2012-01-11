@@ -54,17 +54,21 @@ public class BPRQuery extends BPR{
 	
 	//input: query=[id1,id2,...]
 	//output: ranking list=[id1,id2...]
-	public List<String> query(Collection<String> query,Integer type){
+	private Collection<String> query;
+	private Integer type;
+	public void initQuery(Collection<String> query,Integer type){
+		this.query = query;
+		this.type = type;
 		
-		Vector qfea ;
-		
-		qfea = cooccurFea(query);
-		/*
-		qfea = Vector.zeros(K);
-		for(String id: query){
-			qfea = qfea.add(features.get(id));
-		}
-		*/
+		initCooccurFea(query);
+	}
+	
+	//run 10000 times
+	public void queryIter(){
+		cooccurFeaIter();
+	}
+	
+	public List<String> getRank(){
 		TreeMap<Double,String> score_id = new TreeMap<Double,String>(new Comparator<Double>(){
 			public int compare(Double a,Double b){
 				return -a.compareTo(b);

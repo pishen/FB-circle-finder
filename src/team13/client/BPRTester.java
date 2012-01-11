@@ -35,6 +35,10 @@ public class BPRTester {
 	private int addedStatusCount;
 	private int currentStatus;
 	
+	private Timer predictingTimer;
+	private boolean predictingTimerCanceled;
+	private int predictingIterCount;
+	
 	private enum EntityType{
 		USER, PHOTO, QUERY, STATUS
 	};
@@ -72,7 +76,7 @@ public class BPRTester {
 		MainPage.currentPage.setStatus("training stopped at iteration " + currentTrain, true);
 		//trigger new prediction
 		bprQuery = new BPRQuery(bprTrain);
-		predictFriendsList();
+		predictFriendsListInit();
 	}
 	
 	private void trainIter(){
@@ -85,21 +89,22 @@ public class BPRTester {
 	
 	public void addSelectedAndPredict(FBUser selectedFBUser){
 		circleList.add(selectedFBUser);
-		predictFriendsList();
+		predictFriendsListInit();
 	}
 	
 	public void removeSelectedAndPredict(FBUser selectedFBUser){
 		if(selectedFBUser.getId().equals(meId) == false){
 			circleList.remove(selectedFBUser);
-			predictFriendsList();
+			predictFriendsListInit();
 		}
 	}
 	
 	//TODO change to async would require modifying BPRQuery.query()
-	private void predictFriendsList(){
+	private void predictFriendsListInit(){
 		//can't work until changing to async
-		//MainPage.currentPage.setAddRemoveButtonEnabled(false);
-		//MainPage.currentPage.setStatus("predicting...", false);
+		MainPage.currentPage.setAddRemoveButtonEnabled(false);
+		MainPage.currentPage.setStatus("predicting...", false);
+		MainPage.currentPage.setTrainButtonEnabled(false);
 		//
 		
 		//create query
@@ -108,18 +113,49 @@ public class BPRTester {
 			queryList.add(fbUser.getId());
 		}
 		
+		friendsList.clear();
+		
+		bprQuery.initQuery(queryList, EntityType.USER.ordinal());
+		
 		//prediction
-		List<String> predictStrList = bprQuery.query(queryList, EntityType.USER.ordinal());
+		predictingTimer = new Timer(){
+			@Override
+			public void run() {
+				predictFriendsListIter();
+			}
+		};
+		predictingIterCount = 0;
+		predictingTimer.scheduleRepeating(TIMER_INTERVAL);
+		predictingTimerCanceled = false;
+	}
+	
+	private void predictFriendsListIter(){
+		if(predictingTimerCanceled == false){
+			if(predictingIterCount < 100){
+				for(int i = 0; i < 100; i++){
+					bprQuery.queryIter();
+				}
+				predictingIterCount++;
+			}else{
+				predictingTimer.cancel();
+				predictingTimerCanceled = true;
+				predictFriendsListFinish();
+			}
+		}
+	}
+	
+	private void predictFriendsListFinish(){
+		//get result
+		List<String> predictStrList = bprQuery.getRank();
 		
 		//add result to friend list
-		friendsList.clear();
 
 		for(String userId: predictStrList){
 			friendsList.add(userMap.get(userId));
 		}
-		
+				
 		MainPage.currentPage.resetFriendsCellListStatus();
-		
+		MainPage.currentPage.setTrainButtonEnabled(true);
 		MainPage.currentPage.setAddRemoveButtonEnabled(true);
 		MainPage.currentPage.setStatus("finish predicting", true);
 	}
