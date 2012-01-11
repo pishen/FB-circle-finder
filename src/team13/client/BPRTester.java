@@ -99,13 +99,10 @@ public class BPRTester {
 		}
 	}
 	
-	//TODO change to async would require modifying BPRQuery.query()
 	private void predictFriendsListInit(){
-		//can't work until changing to async
 		MainPage.currentPage.setAddRemoveButtonEnabled(false);
 		MainPage.currentPage.setStatus("predicting...", false);
 		MainPage.currentPage.setTrainButtonEnabled(false);
-		//
 		
 		//create query
 		List<String> queryList = new ArrayList<String>();
@@ -149,7 +146,6 @@ public class BPRTester {
 		List<String> predictStrList = bprQuery.getRank();
 		
 		//add result to friend list
-
 		for(String userId: predictStrList){
 			friendsList.add(userMap.get(userId));
 		}
