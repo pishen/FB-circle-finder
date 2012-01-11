@@ -132,14 +132,18 @@ public class MainPage implements EntryPoint {
 		addButton.addClickHandler(new ClickHandler(){
 			@Override
 			public void onClick(ClickEvent event) {
-				bprTester.addSelectedAndPredict(friendsSelectionModel.getSelectedObject());
+				if(friendsProvider.getList().contains(friendsSelectionModel.getSelectedObject())){
+					bprTester.addSelectedAndPredict(friendsSelectionModel.getSelectedObject());
+				}
 			}
 		});
 		
 		removeButton.addClickHandler(new ClickHandler(){
 			@Override
 			public void onClick(ClickEvent event) {
-				bprTester.removeSelectedAndPredict(circleSelectionModel.getSelectedObject());
+				if(circleProvider.getList().contains(circleSelectionModel.getSelectedObject())){
+					bprTester.removeSelectedAndPredict(circleSelectionModel.getSelectedObject());
+				}
 			}
 		});
 		

@@ -52,8 +52,8 @@ public class FBFetcher {
 		
 		String meURL = "https://graph.facebook.com/me?fields=id,name&access_token=" + accessToken;
 		String friendsURL = "https://graph.facebook.com/me/friends?access_token=" + accessToken;
-		String photosURL = "https://graph.facebook.com/me/photos?limit=100&access_token=" + accessToken;
-		String statusesURL = "https://graph.facebook.com/me/statuses?limit=100&access_token=" + accessToken;
+		String photosURL = "https://graph.facebook.com/me/photos?limit=0&access_token=" + accessToken;
+		String statusesURL = "https://graph.facebook.com/me/statuses?limit=0&access_token=" + accessToken;
 		
 		requestJSON("me", meURL);
 		requestJSON("friends", friendsURL);
