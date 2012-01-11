@@ -31,6 +31,7 @@ public class MainPage implements EntryPoint {
 	private Button authenticButton = new Button("Login");
 	private Button addButton = new Button("<");
 	private Button removeButton = new Button(">");
+	private Button resetButton = new Button("c");
 	private Button trainButton = new Button("Start");
 	private Label errorMsgLabel = new Label();
 	private HTML hintHTML = new HTML();
@@ -102,6 +103,7 @@ public class MainPage implements EntryPoint {
 		
 		addButton.setEnabled(false);
 		removeButton.setEnabled(false);
+		resetButton.setEnabled(false);
 		
 		authenticButton.addClickHandler(new ClickHandler(){
 			@Override
@@ -137,6 +139,7 @@ public class MainPage implements EntryPoint {
 				}
 			}
 		});
+		addButton.addStyleName("modifyButton");
 		
 		removeButton.addClickHandler(new ClickHandler(){
 			@Override
@@ -146,6 +149,17 @@ public class MainPage implements EntryPoint {
 				}
 			}
 		});
+		removeButton.addStyleName("modifyButton");
+	
+		resetButton.addClickHandler(new ClickHandler(){
+			@Override
+			public void onClick(ClickEvent event) {
+				if(circleProvider.getList().size() > 1){
+					bprTester.resetSelectedAndPredict();
+				}
+			}
+		});
+		resetButton.addStyleName("modifyButton");
 		
 		circleCellList.setSelectionModel(circleSelectionModel);
 		friendsCellList.setSelectionModel(friendsSelectionModel);
@@ -188,6 +202,7 @@ public class MainPage implements EntryPoint {
 		
 		buttonTable.setWidget(0, 0, addButton);
 		buttonTable.setWidget(1, 0, removeButton);
+		buttonTable.setWidget(2, 0, resetButton);
 		
 		twoListTable.setText(0, 0, "Circle");
 		twoListTable.setText(0, 2, "Suggested Friends");
@@ -223,6 +238,7 @@ public class MainPage implements EntryPoint {
 	public void setAddRemoveButtonEnabled(boolean enabled){
 		addButton.setEnabled(enabled);
 		removeButton.setEnabled(enabled);
+		resetButton.setEnabled(enabled);
 	}
 	
 	public void enableTraining(){

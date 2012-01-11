@@ -36,6 +36,11 @@
 	visibility: hidden;
 }
 
+.modifyButton{
+	width: 30px;
+	height: 30px; 
+}
+
 /** Most GWT widgets already have a style name defined */
 .gwt-DialogBox {
   width: 400px;

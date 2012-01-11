@@ -99,6 +99,12 @@ public class BPRTester {
 		}
 	}
 	
+	public void resetSelectedAndPredict(){
+		circleList.clear();
+		circleList.add(userMap.get(meId));
+		predictFriendsListInit();
+	}
+	
 	private void predictFriendsListInit(){
 		MainPage.currentPage.setAddRemoveButtonEnabled(false);
 		MainPage.currentPage.setStatus("predicting...", false);
@@ -271,6 +277,7 @@ public class BPRTester {
 			boolean statusAdded = false;
 			ArrayList<String> dataList = null;  //<s1, u1, u2, u3, ...> for BPR data
 			
+			/*
 			if(statusJObject.containsKey("likes")){
 				JSONObject likesJObject = statusJObject.get("likes").isObject();
 				JSONArray likesJArray = likesJObject.get("data").isArray();
@@ -289,6 +296,7 @@ public class BPRTester {
 					}
 				}
 			}
+			*/
 			
 			if(statusJObject.containsKey("comments")){
 				JSONObject commentsJObject = statusJObject.get("comments").isObject();
